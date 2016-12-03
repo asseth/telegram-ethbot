@@ -1,44 +1,63 @@
 var bot = require('./server/telethBot');
-var web3 = require('web3');
+var Web3 = require('web3');
+var web3;
 
-var web3 = web3(new web3.providers.HttpProvider('http://localhost:8545'));
-console.log('web3', web3);
+//var web3 = web3(new web3.providers.HttpProvider('http://localhost:8545'));
+//console.log('web3', web3);
 
 
 // Instanciate Web3
-
 
 var users = [{
   name: '',
   chatId: ''
 }];
 var contractInstance;
-var abi = '[{"constant":true,"inputs":[],"name":"expiration","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeadline","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"unlock","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"balance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"_expiration","type":"uint256"}],"payable":false,"type":"constructor"}]';
-var bytecode = '606060405234610000576040516020806101e5833981016040528080519060200190919050505b33600260006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191690836c01000000000000000000000000908102040217905550806000819055505b505b61016a8061007b6000396000f360606040526000357c0100000000000000000000000000000000000000000000000000000000900480634665096d146100645780635f8d96de14610087578063a69df4b5146100aa578063b69ef8a8146100b9578063d321fe29146100dc575b610000565b34610000576100716100ff565b6040518082815260200191505060405180910390f35b3461000057610094610105565b6040518082815260200191505060405180910390f35b34610000576100b7610110565b005b34610000576100c6610159565b6040518082815260200191505060405180910390f35b34610000576100e961015f565b6040518082815260200191505060405180910390f35b60005481565b600060005490505b90565b42600054101561015657600260009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16ff5b5b5b565b60015481565b600060015490505b9056';
+var abi = [{"constant":true,"inputs":[],"name":"getSavingsAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getSavingsDeadline","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"expiration","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"unlock","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"balance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"_expiration","type":"uint256"}],"payable":false,"type":"constructor"}];
+var bytecode = '606060405230600260006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191690836c010000000000000000000000009081020402179055503461000057604051602080610262833981016040528080519060200190919050505b33600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191690836c0100000000000000000000000090810204021790555080600081905550600260009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16316001819055505b505b61016a806100f86000396000f360606040526000357c010000000000000000000000000000000000000000000000000000000090048063116d156f1461006457806321e02992146100875780634665096d146100aa578063a69df4b5146100cd578063b69ef8a8146100dc575b610000565b34610000576100716100ff565b6040518082815260200191505060405180910390f35b346100005761009461010a565b6040518082815260200191505060405180910390f35b34610000576100b7610115565b6040518082815260200191505060405180910390f35b34610000576100da61011b565b005b34610000576100e9610164565b6040518082815260200191505060405180910390f35b600060015490505b90565b600060005490505b90565b60005481565b42600054101561016157600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16ff5b5b5b565b6001548156';
 
-
-/*
- var getContractObject = function () {
- var MyContract = web3.eth.contract(abiArray);
- // instantiate by address
- contractInstance = MyContract.at([address]);
- console.log('contractInstance', contractInstance);
- };
+/**
+ * connect
+ * @param host
+ * @param port
+ * @returns {boolean}
  */
+function connect(host, port) {
+  uri = 'http://' + host + ':' + port;
+  if (typeof web3 !== 'undefined') {
+    web3 = new Web3(web3.currentProvider);
+  }
+  else {
+    /* set the provider you want from Web3.providers */
+    process.stdout.write('Setting Http provider : ' + uri + "\n")
+    var prov = new Web3.providers.HttpProvider(uri);
+    web3 = new Web3(prov);
+  }
 
+  if(!web3.isConnected()) {
+    process.stdout.write('Cannot reach ' + uri + "\n");
+    return false;
+  }
+  else {
+    process.stdout.write('Connected to ' + uri + "\n");
+    return true;
+  }
+}
+
+connect('localhost', 8545);
 
 /**
  * deployContract
  * @param arg
  * @returns {Contract}
  */
-var deployContract = function (arg) {
+var deployContract = function (chatId, arg, cb) {
   var SavingContract = web3.eth.contract(abi);
-  bot.sendMessage('gygy');
+  console.log('arg//////////////////////////////////////////////', arg);
 
   return SavingContract.new(arg,
     {
-      from: eth.coinbase,
+      from: web3.eth.coinbase,
       data: bytecode, gas: 1000000
     }, function (error, contract) {
       if (error) {
@@ -46,14 +65,32 @@ var deployContract = function (arg) {
         return;
       }
       if (!contract.address) {
-        bot.sendMessage(
-          "contract SavingContract creation transaction: " + contract.transactionHash);
+        console.log('contract.address IF');
+        bot.sendMessage(chatId,
+          "contract -- SavingContract -- sending. Transaction hash is: " + contract.transactionHash);
       } else {
-        bot.sendMessage("contract SavingContract mined! Address: " + contract.address);
+        console.log('contract.address ELSE');
+        bot.sendMessage(chatId,
+          "contract SavingContract mined! Address: " + contract.address);
+        cb(SavingContract, contract.address);
       }
     });
 };
 
+/**
+ * getContractObject
+ * @param abi
+ * @param address
+ * @param cb
+ */
+var getContractObject = function (abi, address, cb) {
+  //console.log('abi, address------------', abi, address);
+  var MyContract = web3.eth.contract(abi);
+  // instantiate by address
+  contractInstance = MyContract.at(address);
+  console.log('contractInstance', contractInstance);
+  cb(contractInstance);
+};
 
 bot.onText(/\/(.+)/, function (msg) {
   var chatId = msg.chat.id;
@@ -64,8 +101,20 @@ bot.onText(/\/(.+)/, function (msg) {
       break;
 
     case '/deployContract':
-      deployContract();
+      console.log('let\'s deploy a contract...');
+      deployContract(chatId, 1680746287, function(contract, contractAddress) {
+        getContractObject(contract.abi, contractAddress, function(contractInstance) {
+          console.log('contractInstance----', contractInstance.getSavingsDeadline().toNumber());
+          console.log('contractInstance----', contractInstance.getSavingsAmounts);
+        });
+      });
       break;
+
+    case '/getSavingDeadline':
+      contractInstance.getSavingsDeadline();
+
+    case 'getSavingsAmount':
+      contractInstance.getSavingsAmount();
 
     case '/createLenderAccount':
       users.push({name: msg.chat.username, chatId: msg.chat.id});

@@ -7,20 +7,21 @@ pragma solidity ^0.4.6;
 contract saving {
   uint public expiration; // timestamp en secondes.
   uint public balance;
+  address myAddress = this;
   address owner;
 
 
   function saving(uint _expiration) {
     owner = msg.sender;
     expiration = _expiration;
-    //balance = this.balance;
+    balance = myAddress.balance;
   }
 
-  function getDeadline() constant returns (uint) {
+  function getSavingsDeadline() constant returns (uint) {
       return expiration;
   }
 
-  function getAmount() constant returns (uint) {
+  function getSavingsAmount() constant returns (uint) {
       return balance;
   }
 
