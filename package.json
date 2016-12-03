@@ -1,0 +1,22 @@
+{
+  "name": "finhacks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "telethBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asseth/finhacks2016.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/asseth/finhacks2016/issues"
+  },
+  "homepage": "https://github.com/asseth/finhacks2016#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.24.0"
+  }
+}
