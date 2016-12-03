@@ -120,9 +120,10 @@ def handle(msg):
 
 
 
+# YOUR API KEYs
 
-bot = telepot.Bot('243737862:AAGj06cra0ZmspVSgKiyFVjBvcPDeBJGxIQ')
 
+bot = telepot.Bot('XXXXXXXXXXXXXXX  : YYYYYYYYYYYY')
 bot.message_loop(handle)
 
 print 'I am listening ...'
