@@ -14,16 +14,21 @@ contract saving {
   function saving(uint _expiration) {
     owner = msg.sender;
     expiration = _expiration;
-    balance = myAddress.balance;
+    balance = 1000000;
   }
 
   function getSavingsDeadline() constant returns (uint) {
-      return expiration;
+      return expiration - block.timestamp;
   }
 
   function getSavingsAmount() constant returns (uint) {
       return balance;
   }
+
+  function setSavingsAmount() returns (uint) {
+        balance = 1000000;
+        return balance;
+    }
 
   modifier islocked() {
     if (expiration < block.timestamp) _;

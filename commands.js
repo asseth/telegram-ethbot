@@ -13,6 +13,7 @@ var users = [{
   chatId: ''
 }];
 var contractInstance;
+var contractAddress = '';
 var abi = [{"constant":true,"inputs":[],"name":"getSavingsAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getSavingsDeadline","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"expiration","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"unlock","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"balance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"_expiration","type":"uint256"}],"payable":false,"type":"constructor"}];
 var bytecode = '606060405230600260006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191690836c010000000000000000000000009081020402179055503461000057604051602080610262833981016040528080519060200190919050505b33600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191690836c0100000000000000000000000090810204021790555080600081905550600260009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16316001819055505b505b61016a806100f86000396000f360606040526000357c010000000000000000000000000000000000000000000000000000000090048063116d156f1461006457806321e02992146100875780634665096d146100aa578063a69df4b5146100cd578063b69ef8a8146100dc575b610000565b34610000576100716100ff565b6040518082815260200191505060405180910390f35b346100005761009461010a565b6040518082815260200191505060405180910390f35b34610000576100b7610115565b6040518082815260200191505060405180910390f35b34610000576100da61011b565b005b34610000576100e9610164565b6040518082815260200191505060405180910390f35b600060015490505b90565b600060005490505b90565b60005481565b42600054101561016157600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16ff5b5b5b565b6001548156';
 
@@ -52,13 +53,18 @@ connect('localhost', 8545);
  * @returns {Contract}
  */
 var deployContract = function (chatId, arg, cb) {
+  // set defaultAccount
+  // transactional methods are based on defaultAccount
+  web3.eth.defaultAccount = web3.eth.accounts[0];
+
   var SavingContract = web3.eth.contract(abi);
   console.log('arg//////////////////////////////////////////////', arg);
 
   return SavingContract.new(arg,
     {
       from: web3.eth.coinbase,
-      data: bytecode, gas: 1000000
+      data: bytecode,
+      gas: 2100000
     }, function (error, contract) {
       if (error) {
         console.error(error);
@@ -70,8 +76,12 @@ var deployContract = function (chatId, arg, cb) {
           "contract -- SavingContract -- sending. Transaction hash is: " + contract.transactionHash);
       } else {
         console.log('contract.address ELSE');
+        contractAddress = contract.address;
         bot.sendMessage(chatId,
-          "contract SavingContract mined! Address: " + contract.address);
+          "contract SavingContract mined! Address: " + "https://testnet.etherscan.io/address/" + contract.address);
+        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: contract.address, value: web3.toWei(1, "ether")}, function(x) {
+          console.log('xxxxx-----------', x);
+        });
         cb(SavingContract, contract.address);
       }
     });
@@ -83,17 +93,19 @@ var deployContract = function (chatId, arg, cb) {
  * @param address
  * @param cb
  */
-var getContractObject = function (abi, address, cb) {
-  //console.log('abi, address------------', abi, address);
-  var MyContract = web3.eth.contract(abi);
+var getContractObject = function (contract, address, cb) {
   // instantiate by address
-  contractInstance = MyContract.at(address);
-  console.log('contractInstance', contractInstance);
-  cb(contractInstance);
+  contractInstance = contract.at(address);
+  console.log('address', address);
+  console.log('web3.eth.defaultAccount', web3.eth.defaultAccount);
+      console.log('contractInstance', contractInstance);
+    cb(contractInstance);
 };
 
 bot.onText(/\/(.+)/, function (msg) {
   var chatId = msg.chat.id;
+
+  var date = 1;
 
   switch (msg.text) {
     case '/hello':
@@ -102,10 +114,10 @@ bot.onText(/\/(.+)/, function (msg) {
 
     case '/deployContract':
       console.log('let\'s deploy a contract...');
-      deployContract(chatId, 1680746287, function(contract, contractAddress) {
-        getContractObject(contract.abi, contractAddress, function(contractInstance) {
+      deployContract(chatId, date, function(contract, contractAddress) {
+        getContractObject(contract, contractAddress, function(contractInstance) {
           console.log('contractInstance----', contractInstance.getSavingsDeadline().toNumber());
-          console.log('contractInstance----', contractInstance.getSavingsAmounts);
+          console.log('contractInstance----', contractInstance.getSavingsAmount().toNumber());
         });
       });
       break;
@@ -113,11 +125,13 @@ bot.onText(/\/(.+)/, function (msg) {
     case '/getSavingDeadline':
       contractInstance.getSavingsDeadline();
 
-    case 'getSavingsAmount':
-      contractInstance.getSavingsAmount();
+    case '/getSavingsAmount':
+      console.log('contractInstance.getSavingsAmount()', contractInstance.getSavingsAmount());
+      bot.sendMessage(chatId, contractInstance.getSavingsAmount() + '');
 
-    case '/createLenderAccount':
-      users.push({name: msg.chat.username, chatId: msg.chat.id});
+    case '/setBalance':
+      console.log('web3.eth.defaultAccount contractAddress', web3.eth.defaultAccount, contractAddress);
+      web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: contractAddress, value: web3.toWei(1, "ether")});
       break;
 
     default:
