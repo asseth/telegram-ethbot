@@ -11,20 +11,6 @@ var config = require("./server/core/config");
 var logger = srv.logger;
 logger.setLevels(winston.config.syslog.levels);
 
-var commands = require('./commands');
-
-var telethBot = require("./server/telethBot");
-
-
-var request = require('request');
-request({
-	url: "https://www.cryptocompare.com/api/data/price?fsym=ETH&tsyms=USD",
-	method: "GET"
-}, function(error, response, body) {
-	body = JSON.parse(body);
-	console.log(body.Data[0]);
-});
-
 try {
 	env('./.env', {verbose: false, overwrite: false});
 } catch (err) {

@@ -25,9 +25,9 @@ contract saving {
       return balance;
   }
 
-  function setBalance() returns (uint) {
-        balance = 1000000;
-        return balance;
+  function setBalance(uint balance) returns (uint) {
+        myAddress.balance += balance;
+        return myAddress.balance;
     }
 
   modifier islocked() {
