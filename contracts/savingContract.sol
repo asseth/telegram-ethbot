@@ -25,7 +25,7 @@ contract saving {
       return balance;
   }
 
-  function setSavingsAmount() returns (uint) {
+  function setBalance() returns (uint) {
         balance = 1000000;
         return balance;
     }

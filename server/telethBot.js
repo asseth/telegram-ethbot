@@ -5,7 +5,19 @@ var token = '318996965:AAHGWoq-jJSAZf0lrwcYXOhDDrseVW3kWbU';
 
 // Create a bot that uses 'polling' to fetch new updates
 var bot = new TelegramBot(token, { polling: true });
+var chatId = 0;
 
+bot.onText(/\/start/, function (msg, match) {
+  console.log('msg, match', msg, match);
+  // 'msg' is the received Message from Telegram
+  // 'match' is the result of executing the regexp above on the text content
+  // of the message
+  chatId = msg.chat.id;
+  // send back the matched "whatever" to the chat
+  bot.sendMessage(chatId, 'hello');
+});
+
+bot.chatId = chatId;
 module.exports = bot;
 
 /*

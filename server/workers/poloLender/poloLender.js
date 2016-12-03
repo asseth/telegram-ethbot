@@ -10,7 +10,7 @@ var semver = require("semver");
 var Poloniex = require("./poloniex.js");
 var srv = require ("../../core/srv");
 var pjson = require('../../../package.json');
-//var bot = require('../../telethBot');
+var bot = require('../../telethBot');
 
 
 var PoloLender = function(name) {
@@ -331,7 +331,8 @@ var PoloLender = function(name) {
 				var newActiveLoans;
 				if (err) {
 					logger.notice("returnActiveLoans: " + err.message);
-					return callback(err);
+          bot.sendMessage(278992414, "returnActiveLoans: " + err.message);
+          return callback(err);
 				}
 				newActiveLoans = result.hasOwnProperty("provided") ? result.provided : [];
 				updateWithNewActiveLoans(newActiveLoans);
@@ -355,7 +356,9 @@ var PoloLender = function(name) {
 			poloPrivate.returnOpenLoanOffers(function (err, result) {
 				if (err) {
 					logger.notice("returnOpenLoanOffers: " + err.message);
-					return callback(err);
+          bot.sendMessage(278992414, "returnOpenLoanOffers: " + err.message);
+
+          return callback(err);
 				}
 				currencies.forEach(function (c, i, a) {
 					var newActiveOffers;
@@ -380,7 +383,8 @@ var PoloLender = function(name) {
 			poloPrivate.returnAvailableAccountBalances("lending", function (err, result) {
 				if (err) {
 					logger.notice("returnAvailableAccountBalances: " + err.message);
-					return callback(err);
+          bot.sendMessage(278992414, "returnAvailableAccountBalances: " + err.message);
+          return callback(err);
 				}
 				currencies.forEach(function (c, i, a) {
 					availableFunds[c] = result.hasOwnProperty("lending") && result.lending.hasOwnProperty(c) ? result.lending[c] : "0";
@@ -415,20 +419,25 @@ var PoloLender = function(name) {
 							}
 							if (process.env[self.me+"_NOTRADE"] === "true") {
 								logger.notice("cancelHighOffers: NO TRADE");
-								return cb(null);
+                bot.sendMessage(278992414, "cancelHighOffers: NO TRADE");
+                return cb(null);
 							}
 							poloPrivate.cancelLoanOffer(offer.id.toString(), function (err, result) {
 								if (err) {
 									logger.notice(`cancelLoanOffer: ${err.message} (#${offer.id})`);
-									return cb(err);
+                  bot.sendMessage(278992414, `cancelLoanOffer: ${err.message} (#${offer.id})`);
+                  return cb(err);
 								}
 								anyCanceledOffer  = true;
 								msg = "OfferCanceled #" + offer.id;
 								msg += " " + currency.toUpperCase() + " " + strAR(new Big(offer.amount).toFixed(8), 14);
 								msg += " at " + msgRate(offer.rate);
 								msg += ", brr " + msgRate(advisorInfo[currency].bestReturnRate);
+
+								console.log('bot.chatId 1', bot.chatId);
 								logger.info(msg);
-								return cb(null);
+                bot.sendMessage(278992414, msg);
+                return cb(null);
 							});
 						},
 						function (err) {
@@ -478,13 +487,15 @@ var PoloLender = function(name) {
 
 					if (process.env[self.me+"_NOTRADE"] === "true") {
 						logger.notice("Post offer: NO TRADE");
-						return callback(new Error("NO TRADE"));
+            bot.sendMessage(278992414, "Post offer: NO TRADE");
+            return callback(new Error("NO TRADE"));
 					}
 
 					poloPrivate.createLoanOffer(currency, amount, duration, autoRenew, lendingRate, function (err, result) {
 						if (err) {
 							logger.notice("createLoanOffer: " + err.message);
-							return callback(err);
+              bot.sendMessage(278992414, "createLoanOffer: " + err.message);
+              return callback(err);
 						}
 						status.offersCount++;
 						var newAO = {
@@ -524,13 +535,15 @@ var PoloLender = function(name) {
 			msg += " • Offers/Loans: " + status.offersCount + "/" + status.activeLoansCount + " ";
 			msg += ` • speed: ${speed}/min`;
 			logger.notice(`${msg}`);
+      bot.sendMessage(278992414, `${msg}`);
 
 			if(clientMessage.lastClientSemver && semver.gt(clientMessage.lastClientSemver, pjson.version)) {
 				logger.warning(`New poloLender revision available (current: ${pjson.version}, available: ${clientMessage.lastClientSemver}). Visit https://github.com/dutu/poloLender/ to update`);
 			}
 			if(clientMessage.message) {
 				logger.notice(`${clientMessage.message}`);
-			}
+        bot.sendMessage(278992414, `${clientMessage.message}`);
+      }
 
 			currencies.forEach(function (c, index, array) {
 				var profit = new Big(depositFunds[c]).minus(config.startBalance[c]);
@@ -562,7 +575,8 @@ var PoloLender = function(name) {
 				bfxPublic.ticker("btcusd", function (err, result) {
 					if(err) {
 						logger.notice("bfxPublic.ticker: " + err.message);
-						return;
+            bot.sendMessage(278992414, "bfxPublic.ticker: " + err.message);
+            return;
 					}
 					var rateBTCUSD = new Big(result.last_price).toString();
 					msg = `* ${c}: ${activeLoansCount} loans: ${activeLoansAmount}, res: ${reserved} ● TOTAL: ${depositFunds[c]}, `;
@@ -574,6 +588,7 @@ var PoloLender = function(name) {
 					var ewmr =  msgRate(new Big(status.wmr[c]).times(0.85).toFixed(8));
 					msg += ` ● wmr: ${wmrMsg} ewmr: ${ewmr} ● alht: ${advisorInfo[c].averageLoanHoldingTime}`;
 					logger.notice(msg);
+					bot.sendMessage(278992414, msg);
 				});
 			});
 		};
@@ -672,7 +687,8 @@ var PoloLender = function(name) {
 		});
 		socket.on("disconnect", function () {
 			logger.notice(`Disconnected from server ${config.advisor}`);
-		});
+      bot.sendMessage(278992414, `Disconnected from server ${config.advisor}`);
+    });
 		socket.on("reconnecting", function (attemptNumber) {
 			logger.info(`Reconnecting to server ${config.advisor} (${attemptNumber})`);
 		});

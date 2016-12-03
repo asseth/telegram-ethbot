@@ -1,6 +1,8 @@
 "use strict";
 
 var _ = require("lodash");
+var bot = require('../telethBot');
+
 
 var Workers = function() {
 	var srv = require ("./../core/srv");
@@ -37,9 +39,11 @@ var Workers = function() {
             new Date().toString('T'),
             graceTimeout
         );
+        bot.sendMessage(278992414, "%s: received signal (%s) on %s, shutting down gracefully in %s ms'");
         setTimeout(function() {
             logger.notice('(x) forcefully shutting down',graceTimeout);
-            process.exit();
+            bot.sendMessage(278992414, '(x) forcefully shutting down',graceTimeout);
+          process.exit();
         }, graceTimeout);
 
         self.workers.forEach(function (element, index, array) {
