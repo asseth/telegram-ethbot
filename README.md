@@ -1,5 +1,8 @@
 # finhacks2016
 
+This project was done by Asseth at the Finaxys hackathon of December 2016. It is a Telegram-bot interface providing information on your ethereum miner, on your poloniex trades, and deploying a simple contract.
+
+
 # Testnet
     $ geth --testnet --rpc --rpcapi 'web3,eth,debug, personal, miner' --rpccorsdomain="*"
 
